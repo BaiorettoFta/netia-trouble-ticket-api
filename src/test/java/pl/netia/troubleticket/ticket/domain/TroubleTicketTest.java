@@ -106,6 +106,23 @@ class TroubleTicketTest {
         assertThat(ticket.getUpdatedAt()).isEqualTo(NOW);
     }
 
+    @ParameterizedTest(name = "in status {0}")
+    @EnumSource(TroubleTicketStatus.class)
+    void addsANoteInAnyStatusWithoutChangingTheTicket(TroubleTicketStatus status) {
+        TroubleTicket ticket = ticketInStatus(status);
+
+        TroubleTicketNote note = ticket.addNote(new NoteText("Klient prosi o potwierdzenie terminu."), "partner-b",
+                LATER);
+
+        assertThat(note.getText()).isEqualTo("Klient prosi o potwierdzenie terminu.");
+        assertThat(note.getCreatedBy()).isEqualTo("partner-b");
+        assertThat(note.getCreatedAt()).isEqualTo(LATER);
+        assertThat(ticket.getNotes()).hasSize(2).last().isSameAs(note);
+        assertThat(ticket.getStatus()).isEqualTo(status);
+        assertThat(ticket.getUpdatedBy()).isEqualTo("partner-a");
+        assertThat(ticket.getUpdatedAt()).isEqualTo(NOW);
+    }
+
     @Test
     void parsesEveryStatusCodeOfTheContract() {
         assertThat(TroubleTicketStatus.values())

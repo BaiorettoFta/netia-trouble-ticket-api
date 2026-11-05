@@ -33,6 +33,12 @@ public interface TroubleTicketRepository extends JpaRepository<TroubleTicket, St
     Optional<TroubleTicket> findWithNotesByIdAndTenant(String id, String tenantId);
 
     /**
+     * The ticket alone: no notes, no lock.
+     */
+    @Query("select ticket from TroubleTicket ticket where ticket.id = :id and ticket.tenantId = :tenantId")
+    Optional<TroubleTicket> findByIdAndTenant(String id, String tenantId);
+
+    /**
      * The ticket with its row locked until the end of the transaction, so its status cannot change between being
      * checked and being written: a concurrent change, for example by the ticket handling system, waits or is waited
      * for. Notes are not fetched here, because PostgreSQL cannot lock rows on the outer side of a join.
