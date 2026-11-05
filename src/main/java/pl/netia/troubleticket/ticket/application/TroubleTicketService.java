@@ -16,11 +16,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import pl.netia.troubleticket.ticket.application.CreationResult.AlreadyExists;
 import pl.netia.troubleticket.ticket.application.CreationResult.Created;
 import pl.netia.troubleticket.ticket.domain.NewTroubleTicket;
+import pl.netia.troubleticket.ticket.domain.NoteText;
 import pl.netia.troubleticket.ticket.domain.ServiceInventory;
 import pl.netia.troubleticket.ticket.domain.TenantId;
 import pl.netia.troubleticket.ticket.domain.TroubleTicket;
 import pl.netia.troubleticket.ticket.domain.TroubleTicketIdGenerator;
+import pl.netia.troubleticket.ticket.domain.TroubleTicketNote;
 import pl.netia.troubleticket.ticket.domain.TroubleTicketSummary;
+import pl.netia.troubleticket.ticket.persistence.TroubleTicketNoteRepository;
 import pl.netia.troubleticket.ticket.persistence.TroubleTicketRepository;
 
 /**
@@ -32,15 +35,18 @@ public class TroubleTicketService {
     private static final Logger log = LoggerFactory.getLogger(TroubleTicketService.class);
 
     private final TroubleTicketRepository tickets;
+    private final TroubleTicketNoteRepository notes;
     private final ServiceInventory serviceInventory;
     private final TroubleTicketIdGenerator idGenerator;
     private final Clock clock;
     private final TransactionTemplate writeTransaction;
     private final TransactionTemplate readTransaction;
 
-    public TroubleTicketService(TroubleTicketRepository tickets, ServiceInventory serviceInventory,
-            TroubleTicketIdGenerator idGenerator, Clock clock, PlatformTransactionManager transactionManager) {
+    public TroubleTicketService(TroubleTicketRepository tickets, TroubleTicketNoteRepository notes,
+            ServiceInventory serviceInventory, TroubleTicketIdGenerator idGenerator, Clock clock,
+            PlatformTransactionManager transactionManager) {
         this.tickets = tickets;
+        this.notes = notes;
         this.serviceInventory = serviceInventory;
         this.idGenerator = idGenerator;
         this.clock = clock;
@@ -94,6 +100,19 @@ public class TroubleTicketService {
                     .orElseThrow(() -> new TroubleTicketNotFoundException(id));
             ticket.close(actor, now());
             return TroubleTicketView.of(ticket);
+        });
+    }
+
+    /**
+     * Adds a note to a ticket of the tenant, whatever its status. The ticket row is neither locked nor written: the
+     * note is a row of its own, so adding it cannot overwrite a concurrent status change.
+     */
+    public NoteView addNote(TenantId tenantId, String actor, String id, NoteText text) {
+        return inTransaction(writeTransaction, () -> {
+            TroubleTicket ticket = tickets.findByIdAndTenant(id, tenantId.value())
+                    .orElseThrow(() -> new TroubleTicketNotFoundException(id));
+            TroubleTicketNote note = notes.save(ticket.addNote(text, actor, now()));
+            return NoteView.of(note);
         });
     }
 

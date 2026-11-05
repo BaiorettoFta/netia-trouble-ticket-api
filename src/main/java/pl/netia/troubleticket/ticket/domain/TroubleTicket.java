@@ -117,6 +117,17 @@ public class TroubleTicket implements Persistable<String> {
         updatedAt = now;
     }
 
+    /**
+     * Adds a note to the ticket in any status: the contract only requires the ticket to exist in the caller's tenant.
+     * Whether notes to closed tickets should be refused is a decision for the owner of the process. The ticket
+     * itself does not change, so adding a note never competes with a concurrent status change.
+     */
+    public TroubleTicketNote addNote(NoteText text, String actor, Instant now) {
+        TroubleTicketNote note = new TroubleTicketNote(this, text.value(), actor, now);
+        notes.add(note);
+        return note;
+    }
+
     @PostLoad
     @PostPersist
     void markStored() {
