@@ -1,6 +1,12 @@
 spring:
   application:
     name: trouble-ticket-api
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # The issuer and the key set (jwk-set-uri) come from the environment, see the local profile and README.
+          audiences: trouble-ticket-api
 
 logging:
   pattern:
