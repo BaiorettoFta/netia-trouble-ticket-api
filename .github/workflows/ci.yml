@@ -46,3 +46,27 @@ jobs:
         with:
           name: coverage-report
           path: target/site/jacoco/
+
+  compose-smoke:
+    name: Smoke test of the Compose environment
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The same command a reviewer runs: image built from a clean clone, then the API, PostgreSQL and the
+      # local OAuth2 server, waiting for the readiness probe.
+      - name: Start the environment
+        run: docker compose up --build --wait
+
+      - name: Run the smoke test
+        run: scripts/smoke-test.sh
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop the environment
+        if: always()
+        run: docker compose down -v
