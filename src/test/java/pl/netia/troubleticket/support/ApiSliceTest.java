@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
 import pl.netia.troubleticket.security.SecurityConfiguration;
 import pl.netia.troubleticket.web.ErrorResponseWriter;
+import pl.netia.troubleticket.web.JsonStrictnessConfiguration;
 
 /**
  * Web slice test with the real security and web configuration, and a {@link FakeJwtDecoder} instead of a real
@@ -19,7 +20,8 @@ import pl.netia.troubleticket.web.ErrorResponseWriter;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @WebMvcTest
-@Import({SecurityConfiguration.class, ErrorResponseWriter.class, FakeJwtDecoder.class})
+@Import({SecurityConfiguration.class, ErrorResponseWriter.class, JsonStrictnessConfiguration.class,
+        FakeJwtDecoder.class})
 public @interface ApiSliceTest {
 
     @AliasFor(annotation = WebMvcTest.class, attribute = "controllers")

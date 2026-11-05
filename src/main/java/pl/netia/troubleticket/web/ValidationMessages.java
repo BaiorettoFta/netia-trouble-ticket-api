@@ -6,8 +6,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.validation.FieldError;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.exc.InvalidFormatException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
+import tools.jackson.databind.exc.ValueInstantiationException;
 
 /**
  * Turns validation and parsing failures into one readable message. The contract {@code Error} schema has no field
@@ -40,11 +41,21 @@ final class ValidationMessages {
         if (field.isEmpty()) {
             return NOT_JSON;
         }
-        if (exception instanceof MismatchedInputException mismatch
-                && mismatch.getTargetType() != null && mismatch.getTargetType().isEnum()) {
+        if (isValueOutsideAllowedSet(exception)) {
             return "Pole " + field + " ma niedozwoloną wartość dla tej operacji.";
         }
         return "Pole " + field + " ma niepoprawny typ.";
+    }
+
+    /**
+     * A string that is not one of the enum values allowed by the contract (for example a status other than
+     * {@code new}): the generated enums reject it in their factory method, which Jackson reports as a failed
+     * instantiation; plain enums report an invalid format.
+     */
+    private static boolean isValueOutsideAllowedSet(JacksonException exception) {
+        return exception instanceof ValueInstantiationException
+                || exception instanceof InvalidFormatException invalidFormat
+                        && invalidFormat.getTargetType() != null && invalidFormat.getTargetType().isEnum();
     }
 
     private static String forFieldError(FieldError error) {
