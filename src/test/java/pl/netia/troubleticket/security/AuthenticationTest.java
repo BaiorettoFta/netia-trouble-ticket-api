@@ -5,20 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import pl.netia.troubleticket.support.ApiSliceTest;
 import pl.netia.troubleticket.support.FakeJwtDecoder;
-import pl.netia.troubleticket.ticket.application.TroubleTicketService;
 
-@ApiSliceTest
+@ApiSliceTest(controllers = ContractEndpointsProbe.class)
+@Import(ContractEndpointsProbe.class)
 class AuthenticationTest {
-
-    @MockitoBean
-    private TroubleTicketService troubleTicketService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -67,6 +64,6 @@ class AuthenticationTest {
         client.get().uri("/api/v1/troubleTicket")
                 .header(HttpHeaders.AUTHORIZATION, FakeJwtDecoder.bearer("tenant-a", "read"))
                 .exchange()
-                .expectStatus().value(status -> assertThat(status).isNotEqualTo(401));
+                .expectStatus().isNoContent();
     }
 }

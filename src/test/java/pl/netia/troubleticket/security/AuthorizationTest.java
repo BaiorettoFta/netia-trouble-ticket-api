@@ -8,21 +8,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import pl.netia.troubleticket.support.ApiSliceTest;
 import pl.netia.troubleticket.support.FakeJwtDecoder;
-import pl.netia.troubleticket.ticket.application.TroubleTicketService;
 
-@ApiSliceTest
+@ApiSliceTest(controllers = ContractEndpointsProbe.class)
+@Import(ContractEndpointsProbe.class)
 class AuthorizationTest {
-
-    @MockitoBean
-    private TroubleTicketService troubleTicketService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -77,6 +74,6 @@ class AuthorizationTest {
         client.method(method).uri(path)
                 .header(HttpHeaders.AUTHORIZATION, FakeJwtDecoder.bearer("tenant-a", requiredScope))
                 .exchange()
-                .expectStatus().value(status -> assertThat(status).isNotIn(401, 403));
+                .expectStatus().isNoContent();
     }
 }

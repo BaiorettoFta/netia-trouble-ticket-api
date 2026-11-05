@@ -14,6 +14,7 @@ import pl.netia.troubleticket.security.CurrentClient;
 import pl.netia.troubleticket.ticket.application.CreationResult.AlreadyExists;
 import pl.netia.troubleticket.ticket.application.CreationResult.Created;
 import pl.netia.troubleticket.ticket.application.TroubleTicketService;
+import pl.netia.troubleticket.ticket.application.TroubleTicketView;
 import pl.netia.troubleticket.ticket.domain.NewTroubleTicket;
 import pl.netia.troubleticket.web.ApiPaths;
 
@@ -47,14 +48,20 @@ class TroubleTicketController implements TroubleTicketApi {
         };
     }
 
+    /**
+     * Query parameters are ignored: the contract v1 has no paging or filtering and no 400 for this operation.
+     */
     @Override
     public ResponseEntity<List<TroubleTicketSummaryDto>> listTroubleTickets() {
-        return notImplementedYet();
+        return ResponseEntity.ok(service.list(currentClient.get().tenantId()).stream()
+                .map(TroubleTicketDtoMapper::toDto)
+                .toList());
     }
 
     @Override
     public ResponseEntity<TroubleTicketDto> getTroubleTicketById(String id) {
-        return notImplementedYet();
+        TroubleTicketView ticket = service.get(currentClient.get().tenantId(), id);
+        return ResponseEntity.ok(TroubleTicketDtoMapper.toDto(ticket));
     }
 
     @Override
