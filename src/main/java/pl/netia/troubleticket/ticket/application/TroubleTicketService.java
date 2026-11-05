@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -24,6 +26,8 @@ import pl.netia.troubleticket.ticket.persistence.TroubleTicketRepository;
  */
 @Service
 public class TroubleTicketService {
+
+    private static final Logger log = LoggerFactory.getLogger(TroubleTicketService.class);
 
     private final TroubleTicketRepository tickets;
     private final ServiceInventory serviceInventory;
@@ -56,6 +60,8 @@ public class TroubleTicketService {
             // key committed first. PostgreSQL has aborted this transaction, so the winner is read in a new one.
             Optional<TroubleTicketView> winner =
                     inTransaction(readTransaction, () -> findByExternalId(tenantId, newTicket.externalId()));
+            log.info("Concurrent create in tenant {} for an existing external id; returning the stored ticket",
+                    tenantId);
             return new AlreadyExists(winner.orElseThrow(() -> conflict));
         }
     }

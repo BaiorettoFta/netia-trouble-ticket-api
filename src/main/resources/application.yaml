@@ -40,6 +40,11 @@ spring:
           audiences: trouble-ticket-api
 
 logging:
+  level:
+    # Hibernate would log every unique-key conflict as an SQL warning with the key values, including the expected
+    # one of two concurrent creates with the same externalId, which TroubleTicketService handles. Unexpected SQL
+    # errors still reach ApiExceptionHandler and are logged there once, with the request id.
+    org.hibernate.orm.jdbc.error: off
   pattern:
     # Every log line carries the request id that is also returned in X-Request-Id and in error bodies.
     level: "%5p [%X{requestId:-}]"
