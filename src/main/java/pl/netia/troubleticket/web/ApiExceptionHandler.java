@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import pl.netia.troubleticket.ticket.application.ServiceNotFoundException;
+import pl.netia.troubleticket.ticket.domain.InvalidInputException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.exc.StreamConstraintsException;
 
@@ -27,6 +29,18 @@ import tools.jackson.core.exc.StreamConstraintsException;
 class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+    @ExceptionHandler(InvalidInputException.class)
+    ResponseEntity<Object> handleInvalidInput(InvalidInputException exception, WebRequest request) {
+        String message = ValidationMessages.forInputViolations(exception.violations());
+        return error(ErrorCode.VALIDATION_ERROR, message, new HttpHeaders(), request);
+    }
+
+    @ExceptionHandler(ServiceNotFoundException.class)
+    ResponseEntity<Object> handleServiceNotFound(ServiceNotFoundException exception, WebRequest request) {
+        return error(ErrorCode.SERVICE_NOT_FOUND, ErrorCode.SERVICE_NOT_FOUND.defaultMessage(), new HttpHeaders(),
+                request);
+    }
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<Object> handleUnexpected(Exception exception, WebRequest request) {

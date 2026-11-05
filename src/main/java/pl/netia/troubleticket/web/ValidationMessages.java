@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.validation.FieldError;
+import pl.netia.troubleticket.ticket.domain.InputViolation;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.InvalidFormatException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
@@ -20,6 +21,17 @@ final class ValidationMessages {
     static final String NOT_JSON = "Treść żądania nie jest poprawnym dokumentem JSON.";
 
     private ValidationMessages() {
+    }
+
+    static String forInputViolations(Collection<InputViolation> violations) {
+        return violations.stream()
+                .sorted(Comparator.comparing(InputViolation::field).thenComparing(InputViolation::reason))
+                .map(violation -> switch (violation.reason()) {
+                    case TOO_LONG -> "Pole " + violation.field() + " może mieć najwyżej " + violation.limit()
+                            + " znaków.";
+                    case FORBIDDEN_CHARACTERS -> "Pole " + violation.field() + " zawiera niedozwolone znaki.";
+                })
+                .collect(Collectors.joining(" "));
     }
 
     static String forFieldErrors(Collection<FieldError> errors) {
