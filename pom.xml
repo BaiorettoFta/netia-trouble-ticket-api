@@ -21,6 +21,7 @@
         <java.version>21</java.version>
         <openapi-generator.version>7.27.0</openapi-generator.version>
         <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
+        <jacoco.version>0.8.16</jacoco.version>
         <!-- JVM arguments for test runs; tools such as JaCoCo may extend it. -->
         <argLine/>
     </properties>
@@ -197,6 +198,42 @@
                 <configuration>
                     <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Duser.language=en -Duser.country=US</argLine>
                 </configuration>
+            </plugin>
+            <plugin>
+                <!-- One coverage report for unit and integration tests together, in target/site/jacoco. There is
+                     deliberately no threshold: the report informs, it does not fail the build. -->
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <destFile>${project.build.directory}/jacoco.exec</destFile>
+                    <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+                    <excludes>
+                        <!-- Code generated from the contract. -->
+                        <exclude>pl/netia/troubleticket/openapi/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>unit-tests</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>integration-tests</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
