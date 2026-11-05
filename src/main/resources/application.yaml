@@ -1,3 +1,8 @@
 spring:
   application:
     name: trouble-ticket-api
+
+logging:
+  pattern:
+    # Every log line carries the request id that is also returned in X-Request-Id and in error bodies.
+    level: "%5p [%X{requestId:-}]"
