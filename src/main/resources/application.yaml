@@ -1,3 +1,35 @@
 spring:
   application:
     name: trouble-ticket-api
+  jackson:
+    # The contract forbids unknown fields (additionalProperties: false) and fixes JSON types. Jackson 3 defaults
+    # are lenient (unknown fields ignored, 1.5 truncated to 1, "123" read as a number), so they are tightened here.
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
+    mapper:
+      allow-coercion-of-scalars: false
+      # Jackson 3 sorts properties alphabetically by default; responses keep the field order of the contract.
+      sort-properties-alphabetically: false
+    datatype:
+      enum:
+        fail-on-numbers-for-enums: true
+    read:
+      # RFC 8259 leaves duplicate keys undefined; rejecting them removes any ambiguity.
+      strict-duplicate-detection: true
+    factory:
+      constraints:
+        read:
+          # 1 MB per request body; larger bodies are answered with 413 instead of being read into memory.
+          max-document-length: 1048576
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # The issuer and the key set (jwk-set-uri) come from the environment, see the local profile and README.
+          audiences: trouble-ticket-api
+
+logging:
+  pattern:
+    # Every log line carries the request id that is also returned in X-Request-Id and in error bodies.
+    level: "%5p [%X{requestId:-}]"
