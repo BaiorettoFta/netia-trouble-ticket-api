@@ -13,6 +13,7 @@ services:
       oauth:
         condition: service_started
     environment:
+      SPRING_PROFILES_ACTIVE: local
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/trouble_ticket
       SPRING_DATASOURCE_USERNAME: trouble_ticket
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-trouble_ticket}
