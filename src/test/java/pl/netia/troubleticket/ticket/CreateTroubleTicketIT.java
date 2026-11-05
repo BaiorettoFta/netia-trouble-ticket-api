@@ -4,12 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Year;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
+import pl.netia.troubleticket.openapi.model.TroubleTicketDto;
 import pl.netia.troubleticket.support.IntegrationTest;
 import pl.netia.troubleticket.support.TestJwtIssuer;
 
@@ -132,6 +143,36 @@ class CreateTroubleTicketIT extends IntegrationTest {
                 TestJwtIssuer.token().tenant(tenant).scopes("trouble-ticket:read").asBearer())
                 .expectStatus().isForbidden()
                 .expectBody().jsonPath("$.code").isEqualTo("FORBIDDEN");
+    }
+
+    @Test
+    void concurrentCreatesWithOneExternalIdYieldExactlyOneTicket() throws Exception {
+        String body = createRequest("OK-RACE", givenActiveService());
+        String bearer = bearer();
+        int requests = 20;
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<EntityExchangeResult<TroubleTicketDto>>> responses = new ArrayList<>();
+
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (int i = 0; i < requests; i++) {
+                responses.add(executor.submit(() -> {
+                    start.await();
+                    return create(body, bearer).expectBody(TroubleTicketDto.class).returnResult();
+                }));
+            }
+            start.countDown();
+        }
+
+        List<Integer> statuses = new ArrayList<>();
+        Set<String> ids = new HashSet<>();
+        for (Future<EntityExchangeResult<TroubleTicketDto>> response : responses) {
+            EntityExchangeResult<TroubleTicketDto> result = response.get();
+            statuses.add(result.getStatus().value());
+            ids.add(Objects.requireNonNull(result.getResponseBody()).id());
+        }
+        assertThat(statuses).containsOnlyOnce(201).containsOnly(201, 200).hasSize(requests);
+        assertThat(ids).hasSize(1);
+        assertThat(ticketCount("OK-RACE")).isEqualTo(1);
     }
 
     private RestTestClient.ResponseSpec create(String body, String bearer) {
