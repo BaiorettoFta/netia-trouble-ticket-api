@@ -1,0 +1,5 @@
+# Local environment started with Docker Compose.
+spring:
+  flyway:
+    # Demo services that make the contract examples work locally; no other profile loads them.
+    locations: classpath:db/migration,classpath:db/demo

@@ -1,0 +1,88 @@
+# Requests for the IntelliJ HTTP Client against the local environment (docker compose up --build --wait).
+# Run "Token" first: it stores the access token for the requests below. Demo clients: partner-a (tenant-a, read and
+# write), partner-a-readonly (tenant-a, read), partner-b (tenant-b, read and write).
+
+@api = http://localhost:8080/api/v1
+@oauth = http://localhost:8090/netia
+
+### Token for partner-a
+POST {{oauth}}/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=partner-a&client_secret=any
+
+> {%
+    client.global.set("token", response.body.access_token);
+%}
+
+### Create a trouble ticket: the request example of the contract. Sent again, it returns 200 with the same ticket.
+POST {{api}}/troubleTicket
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "externalId": "OK-123456",
+  "serviceId": 987654321,
+  "description": "Brak transmisji danych dla usługi klienta.",
+  "status": "new",
+  "note": "Zgłoszenie utworzone przez konto API partnera."
+}
+
+> {%
+    client.global.set("ticketId", response.body.id);
+%}
+
+### List the trouble tickets of the tenant
+GET {{api}}/troubleTicket
+Authorization: Bearer {{token}}
+
+### Get the trouble ticket
+GET {{api}}/troubleTicket/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### Add a note
+POST {{api}}/troubleTicket/{{ticketId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "text": "Klient prosi o potwierdzenie planowanego terminu zamknięcia."
+}
+
+### Close the trouble ticket; closing it again returns 200 without changes
+PATCH {{api}}/troubleTicket/{{ticketId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "closed"
+}
+
+### 400 VALIDATION_ERROR: create accepts only the status "new"
+POST {{api}}/troubleTicket
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "externalId": "OK-123457",
+  "serviceId": 987654321,
+  "description": "Niestabilne parametry usługi.",
+  "status": "acknowledged",
+  "note": "Zgłoszenie utworzone przez konto API partnera."
+}
+
+### 404 SERVICE_NOT_FOUND: service 987654331 belongs to tenant-b
+POST {{api}}/troubleTicket
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "externalId": "OK-123458",
+  "serviceId": 987654331,
+  "description": "Brak transmisji danych dla usługi klienta.",
+  "status": "new",
+  "note": "Zgłoszenie utworzone przez konto API partnera."
+}
+
+### 401 UNAUTHORIZED: no token
+GET {{api}}/troubleTicket

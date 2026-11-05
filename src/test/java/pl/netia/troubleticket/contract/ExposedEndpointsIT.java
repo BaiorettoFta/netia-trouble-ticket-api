@@ -2,6 +2,7 @@ package pl.netia.troubleticket.contract;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import pl.netia.troubleticket.support.ContractDocument;
 import pl.netia.troubleticket.support.IntegrationTest;
+import pl.netia.troubleticket.support.TestJwtIssuer;
 
 /**
  * The public surface of the application is exactly the contract: no operation is missing and none is added.
@@ -33,6 +35,22 @@ class ExposedEndpointsIT extends IntegrationTest {
         });
 
         assertThat(exposed).containsExactlyInAnyOrderElementsOf(ContractDocument.operations());
+    }
+
+    /**
+     * Besides the contract, Spring Security publishes the standard OAuth 2.0 resource metadata (RFC 9728), which
+     * must describe this service truthfully.
+     */
+    @Test
+    void publishesTruthfulOAuthResourceMetadata() {
+        unvalidatedClient.get().uri("/.well-known/oauth-protected-resource")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.authorization_servers").isEqualTo(List.of(TestJwtIssuer.ISSUER))
+                .jsonPath("$.scopes_supported").isEqualTo(List.of("trouble-ticket:read", "trouble-ticket:write"))
+                .jsonPath("$.bearer_methods_supported").isEqualTo(List.of("header"))
+                .jsonPath("$.tls_client_certificate_bound_access_tokens").isEqualTo(false);
     }
 
     @Test

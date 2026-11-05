@@ -39,6 +39,20 @@ spring:
           # The issuer and the key set (jwk-set-uri) come from the environment, see the local profile and README.
           audiences: trouble-ticket-api
 
+management:
+  server:
+    # Actuator gets its own port, so the public port exposes exactly the operations of the contract. The port is
+    # meant for probes inside the cluster or the Compose network and is not published.
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
 logging:
   level:
     # Hibernate would log every unique-key conflict as an SQL warning with the key values, including the expected

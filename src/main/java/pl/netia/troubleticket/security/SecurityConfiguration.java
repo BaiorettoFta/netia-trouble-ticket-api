@@ -1,8 +1,11 @@
 package pl.netia.troubleticket.security;
 
 import jakarta.servlet.DispatcherType;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,6 +13,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.OAuth2ProtectedResourceMetadata;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -28,12 +32,33 @@ import pl.netia.troubleticket.web.ErrorResponseWriter;
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfiguration {
 
-    static final String READ = "SCOPE_trouble-ticket:read";
-    static final String WRITE = "SCOPE_trouble-ticket:write";
+    static final String READ_SCOPE = "trouble-ticket:read";
+    static final String WRITE_SCOPE = "trouble-ticket:write";
+    static final String READ = "SCOPE_" + READ_SCOPE;
+    static final String WRITE = "SCOPE_" + WRITE_SCOPE;
+
+    /**
+     * Actuator listens on the management port, which is not published outside the container network. Only health
+     * is open there, for liveness and readiness probes; every other actuator endpoint is denied.
+     */
+    @Bean
+    @Order(1)
+    SecurityFilterChain managementSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+                .csrf(AbstractHttpConfigurer::disable)
+                .requestCache(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(EndpointRequest.to("health")).permitAll()
+                        .anyRequest().denyAll())
+                .build();
+    }
 
     @Bean
-    SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, ErrorResponseWriter errorResponseWriter)
-            throws Exception {
+    @Order(2)
+    SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, ErrorResponseWriter errorResponseWriter,
+            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
         AuthenticationEntryPoint entryPoint = new ErrorBodyAuthenticationEntryPoint(errorResponseWriter);
         AccessDeniedHandler accessDeniedHandler = new ErrorBodyAccessDeniedHandler(errorResponseWriter);
         return http
@@ -54,12 +79,29 @@ public class SecurityConfiguration {
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .jwt(Customizer.withDefaults())
+                        .protectedResourceMetadata(metadata -> metadata.protectedResourceMetadataCustomizer(
+                                resource -> describeResource(resource, issuerUri)))
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .build();
+    }
+
+    /**
+     * Spring Security 7 publishes OAuth 2.0 Protected Resource Metadata (RFC 9728) at
+     * {@code /.well-known/oauth-protected-resource} and points to it from {@code WWW-Authenticate}. Its default
+     * document claims support for certificate-bound tokens, which this service does not have; here it states the
+     * truth and tells clients where tokens come from and which scopes exist.
+     */
+    private static void describeResource(OAuth2ProtectedResourceMetadata.Builder resource, String issuerUri) {
+        resource.tlsClientCertificateBoundAccessTokens(false)
+                .scope(READ_SCOPE)
+                .scope(WRITE_SCOPE);
+        if (!issuerUri.isBlank()) {
+            resource.authorizationServer(issuerUri);
+        }
     }
 
     @Bean
