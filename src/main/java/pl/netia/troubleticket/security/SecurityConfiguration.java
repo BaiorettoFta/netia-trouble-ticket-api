@@ -1,8 +1,10 @@
 package pl.netia.troubleticket.security;
 
 import jakarta.servlet.DispatcherType;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,7 +33,26 @@ public class SecurityConfiguration {
     static final String READ = "SCOPE_trouble-ticket:read";
     static final String WRITE = "SCOPE_trouble-ticket:write";
 
+    /**
+     * Actuator listens on the management port, which is not published outside the container network. Only health
+     * is open there, for liveness and readiness probes; every other actuator endpoint is denied.
+     */
     @Bean
+    @Order(1)
+    SecurityFilterChain managementSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+                .csrf(AbstractHttpConfigurer::disable)
+                .requestCache(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(EndpointRequest.to("health")).permitAll()
+                        .anyRequest().denyAll())
+                .build();
+    }
+
+    @Bean
+    @Order(2)
     SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, ErrorResponseWriter errorResponseWriter)
             throws Exception {
         AuthenticationEntryPoint entryPoint = new ErrorBodyAuthenticationEntryPoint(errorResponseWriter);
