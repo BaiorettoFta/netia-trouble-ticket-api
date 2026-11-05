@@ -22,6 +22,16 @@ spring:
         read:
           # 1 MB per request body; larger bodies are answered with 413 instead of being read into memory.
           max-document-length: 1048576
+  jpa:
+    # Entities are mapped to views inside transactions; no lazy loading while the response is written.
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks that the mapping matches it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   security:
     oauth2:
       resourceserver:
@@ -30,6 +40,11 @@ spring:
           audiences: trouble-ticket-api
 
 logging:
+  level:
+    # Hibernate would log every unique-key conflict as an SQL warning with the key values, including the expected
+    # one of two concurrent creates with the same externalId, which TroubleTicketService handles. Unexpected SQL
+    # errors still reach ApiExceptionHandler and are logged there once, with the request id.
+    org.hibernate.orm.jdbc.error: off
   pattern:
     # Every log line carries the request id that is also returned in X-Request-Id and in error bodies.
     level: "%5p [%X{requestId:-}]"

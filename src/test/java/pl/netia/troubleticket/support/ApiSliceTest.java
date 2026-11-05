@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
+import pl.netia.troubleticket.security.CurrentClient;
 import pl.netia.troubleticket.security.SecurityConfiguration;
 import pl.netia.troubleticket.web.ErrorResponseWriter;
 import pl.netia.troubleticket.web.JsonStrictnessConfiguration;
@@ -20,8 +21,8 @@ import pl.netia.troubleticket.web.JsonStrictnessConfiguration;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @WebMvcTest
-@Import({SecurityConfiguration.class, ErrorResponseWriter.class, JsonStrictnessConfiguration.class,
-        FakeJwtDecoder.class})
+@Import({SecurityConfiguration.class, CurrentClient.class, ErrorResponseWriter.class,
+        JsonStrictnessConfiguration.class, FakeJwtDecoder.class})
 public @interface ApiSliceTest {
 
     @AliasFor(annotation = WebMvcTest.class, attribute = "controllers")

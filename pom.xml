@@ -20,6 +20,7 @@
     <properties>
         <java.version>21</java.version>
         <openapi-generator.version>7.27.0</openapi-generator.version>
+        <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
         <!-- JVM arguments for test runs; tools such as JaCoCo may extend it. -->
         <argLine/>
     </properties>
@@ -82,6 +83,12 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.oai</groupId>
+            <artifactId>openapi-request-validator-core</artifactId>
+            <version>${openapi-request-validator.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -172,7 +179,23 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <!-- Mockito as a Java agent: on JDK 21+ self-attaching prints warnings and will stop working. -->
-                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Duser.language=en -Duser.country=US</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- *IT classes: full application on a real port, PostgreSQL in Testcontainers (needs Docker). -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Duser.language=en -Duser.country=US</argLine>
                 </configuration>
             </plugin>
             <plugin>
