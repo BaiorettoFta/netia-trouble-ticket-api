@@ -16,6 +16,8 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "Użytkownik nie ma uprawnień do wykonania tej operacji."),
     SERVICE_NOT_FOUND(HttpStatus.NOT_FOUND,
             "Wskazana usługa nie istnieje, nie jest aktywna albo nie należy do tenant scope użytkownika."),
+    TROUBLE_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND,
+            "Zgłoszenie nie istnieje albo nie jest widoczne w tenant scope użytkownika."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "Zasób nie istnieje."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Metoda HTTP nie jest obsługiwana dla tego zasobu."),
     CONTENT_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "Treść żądania jest zbyt duża (limit 1 MB)."),

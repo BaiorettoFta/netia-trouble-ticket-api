@@ -17,6 +17,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pl.netia.troubleticket.ticket.application.ServiceNotFoundException;
+import pl.netia.troubleticket.ticket.application.TroubleTicketNotFoundException;
 import pl.netia.troubleticket.ticket.domain.InvalidInputException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.exc.StreamConstraintsException;
@@ -40,6 +41,12 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> handleServiceNotFound(ServiceNotFoundException exception, WebRequest request) {
         return error(ErrorCode.SERVICE_NOT_FOUND, ErrorCode.SERVICE_NOT_FOUND.defaultMessage(), new HttpHeaders(),
                 request);
+    }
+
+    @ExceptionHandler(TroubleTicketNotFoundException.class)
+    ResponseEntity<Object> handleTroubleTicketNotFound(TroubleTicketNotFoundException exception, WebRequest request) {
+        return error(ErrorCode.TROUBLE_TICKET_NOT_FOUND, ErrorCode.TROUBLE_TICKET_NOT_FOUND.defaultMessage(),
+                new HttpHeaders(), request);
     }
 
     @ExceptionHandler(Exception.class)

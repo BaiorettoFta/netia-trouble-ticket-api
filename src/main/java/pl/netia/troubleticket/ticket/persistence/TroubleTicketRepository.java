@@ -18,4 +18,13 @@ public interface TroubleTicketRepository extends JpaRepository<TroubleTicket, St
             where ticket.tenantId = :tenantId and ticket.externalId = :externalId
             """)
     Optional<TroubleTicket> findWithNotesByTenantAndExternalId(String tenantId, String externalId);
+
+    /**
+     * The ticket with its notes, in one query.
+     */
+    @Query("""
+            select ticket from TroubleTicket ticket left join fetch ticket.notes
+            where ticket.id = :id and ticket.tenantId = :tenantId
+            """)
+    Optional<TroubleTicket> findWithNotesByIdAndTenant(String id, String tenantId);
 }

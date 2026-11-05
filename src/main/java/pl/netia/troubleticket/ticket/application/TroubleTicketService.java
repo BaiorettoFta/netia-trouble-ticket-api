@@ -66,6 +66,15 @@ public class TroubleTicketService {
         }
     }
 
+    /**
+     * A ticket of another tenant is reported exactly like a ticket that does not exist.
+     */
+    public TroubleTicketView get(TenantId tenantId, String id) {
+        return inTransaction(readTransaction, () -> tickets.findWithNotesByIdAndTenant(id, tenantId.value())
+                .map(TroubleTicketView::of)
+                .orElseThrow(() -> new TroubleTicketNotFoundException(id)));
+    }
+
     private CreationResult createUnlessExists(TenantId tenantId, String actor, NewTroubleTicket newTicket) {
         Optional<TroubleTicketView> existing = findByExternalId(tenantId, newTicket.externalId());
         if (existing.isPresent()) {
