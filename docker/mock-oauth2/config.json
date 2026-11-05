@@ -1,0 +1,42 @@
+{
+  "interactiveLogin": false,
+  "httpServer": "NettyWrapper",
+  "tokenCallbacks": [
+    {
+      "issuerId": "netia",
+      "tokenExpiry": 3600,
+      "requestMappings": [
+        {
+          "requestParam": "client_id",
+          "match": "partner-a",
+          "claims": {
+            "sub": "partner-a",
+            "aud": ["trouble-ticket-api"],
+            "tenant_id": "tenant-a",
+            "scope": "trouble-ticket:read trouble-ticket:write"
+          }
+        },
+        {
+          "requestParam": "client_id",
+          "match": "partner-a-readonly",
+          "claims": {
+            "sub": "partner-a-readonly",
+            "aud": ["trouble-ticket-api"],
+            "tenant_id": "tenant-a",
+            "scope": "trouble-ticket:read"
+          }
+        },
+        {
+          "requestParam": "client_id",
+          "match": "partner-b",
+          "claims": {
+            "sub": "partner-b",
+            "aud": ["trouble-ticket-api"],
+            "tenant_id": "tenant-b",
+            "scope": "trouble-ticket:read trouble-ticket:write"
+          }
+        }
+      ]
+    }
+  ]
+}
