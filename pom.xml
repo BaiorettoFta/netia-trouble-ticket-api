@@ -13,7 +13,7 @@
 
     <groupId>pl.netia</groupId>
     <artifactId>trouble-ticket-api</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>trouble-ticket-api</name>
     <description>Trouble Ticket API - minimal design-first TMF621 profile</description>
 
