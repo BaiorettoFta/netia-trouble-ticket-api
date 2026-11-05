@@ -48,9 +48,14 @@ class TroubleTicketController implements TroubleTicketApi {
         };
     }
 
+    /**
+     * Query parameters are ignored: the contract v1 has no paging or filtering and no 400 for this operation.
+     */
     @Override
     public ResponseEntity<List<TroubleTicketSummaryDto>> listTroubleTickets() {
-        return notImplementedYet();
+        return ResponseEntity.ok(service.list(currentClient.get().tenantId()).stream()
+                .map(TroubleTicketDtoMapper::toDto)
+                .toList());
     }
 
     @Override

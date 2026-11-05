@@ -3,6 +3,7 @@ package pl.netia.troubleticket.ticket.application;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -19,6 +20,7 @@ import pl.netia.troubleticket.ticket.domain.ServiceInventory;
 import pl.netia.troubleticket.ticket.domain.TenantId;
 import pl.netia.troubleticket.ticket.domain.TroubleTicket;
 import pl.netia.troubleticket.ticket.domain.TroubleTicketIdGenerator;
+import pl.netia.troubleticket.ticket.domain.TroubleTicketSummary;
 import pl.netia.troubleticket.ticket.persistence.TroubleTicketRepository;
 
 /**
@@ -64,6 +66,13 @@ public class TroubleTicketService {
                     tenantId);
             return new AlreadyExists(winner.orElseThrow(() -> conflict));
         }
+    }
+
+    /**
+     * All tickets of the tenant, oldest first. The contract v1 has neither paging nor filtering.
+     */
+    public List<TroubleTicketSummary> list(TenantId tenantId) {
+        return inTransaction(readTransaction, () -> tickets.findSummariesByTenant(tenantId.value()));
     }
 
     /**
