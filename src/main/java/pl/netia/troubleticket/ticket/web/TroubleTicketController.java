@@ -1,7 +1,6 @@
 package pl.netia.troubleticket.ticket.web;
 
 import java.util.List;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import pl.netia.troubleticket.openapi.api.TroubleTicketApi;
@@ -64,13 +63,14 @@ class TroubleTicketController implements TroubleTicketApi {
         return ResponseEntity.ok(TroubleTicketDtoMapper.toDto(ticket));
     }
 
+    /**
+     * The schema allows only status {@code closed} in the request, so the body carries no further information.
+     */
     @Override
     public ResponseEntity<TroubleTicketDto> closeTroubleTicket(String id,
             TroubleTicketCloseStatusRequestDto request) {
-        return notImplementedYet();
-    }
-
-    private static <T> ResponseEntity<T> notImplementedYet() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        AuthenticatedClient client = currentClient.get();
+        TroubleTicketView ticket = service.close(client.tenantId(), client.subject(), id);
+        return ResponseEntity.ok(TroubleTicketDtoMapper.toDto(ticket));
     }
 }

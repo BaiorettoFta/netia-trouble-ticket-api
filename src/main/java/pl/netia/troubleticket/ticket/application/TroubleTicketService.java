@@ -84,6 +84,19 @@ public class TroubleTicketService {
                 .orElseThrow(() -> new TroubleTicketNotFoundException(id)));
     }
 
+    /**
+     * Closes the ticket by the rules of {@link TroubleTicket#close}. The ticket row stays locked from reading the
+     * status until the commit, so the check and the change happen atomically.
+     */
+    public TroubleTicketView close(TenantId tenantId, String actor, String id) {
+        return inTransaction(writeTransaction, () -> {
+            TroubleTicket ticket = tickets.findForUpdateByIdAndTenant(id, tenantId.value())
+                    .orElseThrow(() -> new TroubleTicketNotFoundException(id));
+            ticket.close(actor, now());
+            return TroubleTicketView.of(ticket);
+        });
+    }
+
     private CreationResult createUnlessExists(TenantId tenantId, String actor, NewTroubleTicket newTicket) {
         Optional<TroubleTicketView> existing = findByExternalId(tenantId, newTicket.externalId());
         if (existing.isPresent()) {

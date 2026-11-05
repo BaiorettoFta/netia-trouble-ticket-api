@@ -12,6 +12,7 @@ import pl.netia.troubleticket.openapi.model.ErrorDto;
 public enum ErrorCode {
 
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Żądanie jest niepoprawne."),
+    STATUS_TRANSITION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "Zmiana statusu zgłoszenia nie jest dozwolona."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Brak poprawnego Bearer tokenu."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "Użytkownik nie ma uprawnień do wykonania tej operacji."),
     SERVICE_NOT_FOUND(HttpStatus.NOT_FOUND,

@@ -5,10 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class TroubleTicketTest {
 
     private static final Instant NOW = Instant.parse("2026-03-19T10:15:00Z");
+    private static final Instant LATER = Instant.parse("2026-03-19T11:00:00Z");
 
     private final NewTroubleTicket newTicket = new NewTroubleTicket(
             "OK-123456", 987654321L, "Brak transmisji danych dla usługi klienta.",
@@ -61,6 +65,47 @@ class TroubleTicketTest {
         assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> ticket.getNotes().clear());
     }
 
+    @ParameterizedTest(name = "from {0}")
+    @EnumSource(value = TroubleTicketStatus.class, names = {"NEW", "ACKNOWLEDGED", "IN_PROGRESS", "RESOLVED"})
+    void closesAnOpenTicketAndRecordsWhoClosedIt(TroubleTicketStatus status) {
+        TroubleTicket ticket = ticketInStatus(status);
+
+        ticket.close("partner-b", LATER);
+
+        assertThat(ticket.getStatus()).isEqualTo(TroubleTicketStatus.CLOSED);
+        assertThat(ticket.getUpdatedBy()).isEqualTo("partner-b");
+        assertThat(ticket.getUpdatedAt()).isEqualTo(LATER);
+        assertThat(ticket.getCreatedBy()).isEqualTo("partner-a");
+        assertThat(ticket.getCreatedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void closingAClosedTicketChangesNothing() {
+        TroubleTicket ticket = ticketInStatus(TroubleTicketStatus.NEW);
+        ticket.close("partner-a", NOW);
+
+        ticket.close("partner-b", LATER);
+
+        assertThat(ticket.getStatus()).isEqualTo(TroubleTicketStatus.CLOSED);
+        assertThat(ticket.getUpdatedBy()).isEqualTo("partner-a");
+        assertThat(ticket.getUpdatedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void rejectedTicketCannotBeClosed() {
+        TroubleTicket ticket = ticketInStatus(TroubleTicketStatus.REJECTED);
+
+        assertThatExceptionOfType(StatusTransitionNotAllowedException.class)
+                .isThrownBy(() -> ticket.close("partner-b", LATER))
+                .satisfies(exception -> {
+                    assertThat(exception.currentStatus()).isEqualTo(TroubleTicketStatus.REJECTED);
+                    assertThat(exception.requestedStatus()).isEqualTo(TroubleTicketStatus.CLOSED);
+                });
+        assertThat(ticket.getStatus()).isEqualTo(TroubleTicketStatus.REJECTED);
+        assertThat(ticket.getUpdatedBy()).isEqualTo("partner-a");
+        assertThat(ticket.getUpdatedAt()).isEqualTo(NOW);
+    }
+
     @Test
     void parsesEveryStatusCodeOfTheContract() {
         assertThat(TroubleTicketStatus.values())
@@ -69,5 +114,16 @@ class TroubleTicketTest {
         for (TroubleTicketStatus status : TroubleTicketStatus.values()) {
             assertThat(TroubleTicketStatus.fromCode(status.code())).isEqualTo(status);
         }
+    }
+
+    /**
+     * Statuses other than {@code new} are set by the ticket handling system directly in the database; the domain
+     * offers no way to set them, so the test sets the field the way loading from the database would.
+     */
+    private TroubleTicket ticketInStatus(TroubleTicketStatus status) {
+        TroubleTicket ticket = TroubleTicket.open("TT-2026-000001", new TenantId("tenant-a"), newTicket, "partner-a",
+                NOW);
+        ReflectionTestUtils.setField(ticket, "status", status);
+        return ticket;
     }
 }

@@ -95,6 +95,28 @@ public class TroubleTicket implements Persistable<String> {
         return ticket;
     }
 
+    /**
+     * Closes the ticket at the client's request; the contract lets the client set no other status.
+     * <ul>
+     *   <li>An open ticket ({@code new}, {@code acknowledged}, {@code inProgress}, {@code resolved}) becomes
+     *       {@code closed}, and the closing client is recorded.</li>
+     *   <li>A closed ticket stays as it is, so a client that retries after a timeout gets the same answer.</li>
+     *   <li>A rejected ticket cannot be closed: rejection is the decision of the ticket handling system, and with no
+     *       status history, closing the ticket would erase it.</li>
+     * </ul>
+     */
+    public void close(String actor, Instant now) {
+        if (status == TroubleTicketStatus.CLOSED) {
+            return;
+        }
+        if (status == TroubleTicketStatus.REJECTED) {
+            throw new StatusTransitionNotAllowedException(id, status, TroubleTicketStatus.CLOSED);
+        }
+        status = TroubleTicketStatus.CLOSED;
+        updatedBy = actor;
+        updatedAt = now;
+    }
+
     @PostLoad
     @PostPersist
     void markStored() {

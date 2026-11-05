@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import pl.netia.troubleticket.ticket.application.ServiceNotFoundException;
 import pl.netia.troubleticket.ticket.application.TroubleTicketNotFoundException;
 import pl.netia.troubleticket.ticket.domain.InvalidInputException;
+import pl.netia.troubleticket.ticket.domain.StatusTransitionNotAllowedException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.exc.StreamConstraintsException;
 
@@ -35,6 +36,18 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> handleInvalidInput(InvalidInputException exception, WebRequest request) {
         String message = ValidationMessages.forInputViolations(exception.violations());
         return error(ErrorCode.VALIDATION_ERROR, message, new HttpHeaders(), request);
+    }
+
+    /**
+     * The contract answers a forbidden status change with 400; a separate code lets clients tell it apart from an
+     * invalid request.
+     */
+    @ExceptionHandler(StatusTransitionNotAllowedException.class)
+    ResponseEntity<Object> handleStatusTransitionNotAllowed(StatusTransitionNotAllowedException exception,
+            WebRequest request) {
+        String message = "Nie można zmienić statusu zgłoszenia z %s na %s.".formatted(
+                exception.currentStatus().code(), exception.requestedStatus().code());
+        return error(ErrorCode.STATUS_TRANSITION_NOT_ALLOWED, message, new HttpHeaders(), request);
     }
 
     @ExceptionHandler(ServiceNotFoundException.class)

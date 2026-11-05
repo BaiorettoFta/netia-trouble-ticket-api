@@ -2,6 +2,7 @@ package pl.netia.troubleticket.ticket;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import pl.netia.troubleticket.support.IntegrationTest;
@@ -20,7 +21,7 @@ class ListTroubleTicketsIT extends IntegrationTest {
         long otherService = givenService(otherTenant, "active");
         client.post().uri("/api/v1/troubleTicket")
                 .header(HttpHeaders.AUTHORIZATION, TestJwtIssuer.token().tenant(otherTenant).asBearer())
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(createRequest("OK-OTHER", otherService))
                 .exchange()
                 .expectStatus().isCreated();
