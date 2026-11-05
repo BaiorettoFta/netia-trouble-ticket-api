@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import org.yaml.snakeyaml.Yaml;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The OpenAPI contract read as a plain YAML tree, for tests that compare the application with the contract itself.
@@ -21,6 +22,8 @@ public final class ContractDocument {
             Set.of("get", "put", "post", "delete", "options", "head", "patch", "trace");
 
     private static final Map<String, Object> ROOT = load();
+
+    private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private ContractDocument() {
     }
@@ -36,6 +39,20 @@ public final class ContractDocument {
                 .filter(HTTP_METHODS::contains)
                 .forEach(method -> operations.add(method.toUpperCase(Locale.ROOT) + " " + basePath + path)));
         return operations;
+    }
+
+    /**
+     * The value of a named example from {@code components/examples}.
+     */
+    public static Map<String, Object> example(String name) {
+        return child(child(child(child(ROOT, "components"), "examples"), name), "value");
+    }
+
+    /**
+     * The value of a named example as JSON, ready to be sent as a request body.
+     */
+    public static String exampleJson(String name) {
+        return JSON.writeValueAsString(example(name));
     }
 
     private static String basePath() {
