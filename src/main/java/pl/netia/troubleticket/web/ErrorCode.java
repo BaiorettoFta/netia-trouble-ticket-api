@@ -9,7 +9,8 @@ import pl.netia.troubleticket.openapi.model.ErrorDto;
  */
 public enum ErrorCode {
 
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Brak poprawnego Bearer tokenu.");
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Brak poprawnego Bearer tokenu."),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "Użytkownik nie ma uprawnień do wykonania tej operacji.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
