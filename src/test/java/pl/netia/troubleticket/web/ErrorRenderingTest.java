@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -13,6 +14,7 @@ import pl.netia.troubleticket.support.ApiSliceTest;
 import pl.netia.troubleticket.support.FakeJwtDecoder;
 
 @ApiSliceTest(controllers = ProbeController.class)
+@Import(ProbeController.class)
 class ErrorRenderingTest {
 
     private static final String TOKEN = FakeJwtDecoder.bearer("tenant-a", "read", "write");

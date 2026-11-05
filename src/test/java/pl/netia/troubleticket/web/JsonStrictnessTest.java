@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,6 +26,7 @@ import tools.jackson.databind.json.JsonMapper;
  * The request schemas use additionalProperties: false and exact JSON types, so the parser must not "fix" input.
  */
 @ApiSliceTest(controllers = ProbeController.class)
+@Import(ProbeController.class)
 class JsonStrictnessTest {
 
     private static final String VALID_BODY = """

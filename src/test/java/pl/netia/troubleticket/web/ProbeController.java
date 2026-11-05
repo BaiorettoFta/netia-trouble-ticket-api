@@ -2,6 +2,7 @@ package pl.netia.troubleticket.web;
 
 import jakarta.validation.Valid;
 import java.util.Map;
+import org.springframework.boot.test.context.TestComponent;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +14,10 @@ import pl.netia.troubleticket.openapi.model.TroubleTicketCreateRequestDto;
 /**
  * Test-only endpoints for checking the shared web behaviour (error format, JSON parsing) independently of the
  * business controllers. The request body is the real DTO generated from the contract.
+ * Marked as a test component so the full application context of the integration tests does not pick it up;
+ * slice tests import it explicitly.
  */
+@TestComponent
 @RestController
 class ProbeController {
 
