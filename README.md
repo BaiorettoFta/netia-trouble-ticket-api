@@ -1,8 +1,9 @@
 # Trouble Ticket API
 
-Implementacja kontraktu [`api/trouble-ticket-api.yaml`](api/trouble-ticket-api.yaml) w Javie 21 i Spring Boot 4.1.
-Kontrakt jest tu źródłem prawdy: leży w repo bez zmian, interfejsy kontrolerów i DTO są z niego generowane przy każdym
-buildzie, a testy sprawdzają każdą odpowiedź względem tego samego pliku.
+Implementacja kontraktu [`api/trouble-ticket-api.yaml`](api/trouble-ticket-api.yaml) (w treści zadania
+`devtask/trouble-ticket-api.yaml`) w Javie 21 i Spring Boot 4.1. Kontrakt jest tu źródłem prawdy: leży w repo bez zmian,
+interfejsy kontrolerów i DTO są z niego generowane przy każdym buildzie, a testy sprawdzają każdą odpowiedź względem
+tego samego pliku.
 
 ## Uruchomienie
 
@@ -217,6 +218,8 @@ bez tokenu.
 - Create i zamknięcie można bezpiecznie ponawiać, dodawania notatki już nie: ponowienie po timeoucie doda drugą
   notatkę. W następnej wersji kontraktu dodałbym nagłówek `Idempotency-Key`.
 - Idempotencja nie porównuje treści, więc pomyłka klienta w `externalId` skleja dwa różne incydenty.
+- Nie ma `lock_timeout` ani `statement_timeout`. Jeśli SOZ zawiesi transakcję z blokadą zgłoszenia, zamknięcie będzie
+  czekać i trzymać połączenie z puli. W produkcji ustawiłbym oba limity w PostgreSQL.
 - Treść zgłoszeń może zawierać dane osobowe. Nie trafia do logów, ale polityki retencji nie ma.
 - Przed produkcją dodałbym metryki (Micrometer i Prometheus), tracing (OpenTelemetry), logi w formacie ECS, SBOM
   i skanowanie zależności w pipeline, a do kontraktu `maxLength` i `pattern: '\S'` dla pól tekstowych.
