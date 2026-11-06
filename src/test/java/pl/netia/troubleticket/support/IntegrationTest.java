@@ -19,7 +19,7 @@ import pl.netia.troubleticket.openapi.model.TroubleTicketDto;
 /**
  * The whole application on a random port with PostgreSQL in Testcontainers and real token verification.
  *
- * <p>Every test class gets its own random tenant, so tests are isolated without cleaning tables, and tenant
+ * <p>Every test gets its own random tenant, so tests are isolated without cleaning tables, and tenant
  * isolation itself is exercised all the time.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
