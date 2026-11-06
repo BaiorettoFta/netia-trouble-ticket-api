@@ -7,7 +7,7 @@ import pl.netia.troubleticket.openapi.model.ErrorDto;
 /**
  * Error codes returned in the {@code code} field of the contract {@code Error} schema, with their HTTP status
  * and default message. Codes and messages shown in the contract examples are used verbatim; the remaining ones
- * cover protocol-level situations the contract does not describe.
+ * cover a status change the ticket does not allow and protocol-level situations the contract does not describe.
  */
 public enum ErrorCode {
 

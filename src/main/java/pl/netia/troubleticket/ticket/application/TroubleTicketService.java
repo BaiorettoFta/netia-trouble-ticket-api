@@ -66,11 +66,12 @@ public class TroubleTicketService {
         } catch (DataIntegrityViolationException conflict) {
             // The unique index on (tenant_id, external_id) rejected the insert: a concurrent request with the same
             // key committed first. PostgreSQL has aborted this transaction, so the winner is read in a new one.
-            Optional<TroubleTicketView> winner =
-                    inTransaction(readTransaction, () -> findByExternalId(tenantId, newTicket.externalId()));
+            // Without a winner the violation has another cause and is rethrown as it is.
+            TroubleTicketView winner = inTransaction(readTransaction,
+                    () -> findByExternalId(tenantId, newTicket.externalId())).orElseThrow(() -> conflict);
             log.info("Concurrent create in tenant {} for an existing external id; returning the stored ticket",
                     tenantId);
-            return new AlreadyExists(winner.orElseThrow(() -> conflict));
+            return new AlreadyExists(winner);
         }
     }
 

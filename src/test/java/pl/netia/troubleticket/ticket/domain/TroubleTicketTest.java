@@ -58,6 +58,21 @@ class TroubleTicketTest {
     }
 
     @Test
+    void equalsTheSameTicketSeenThroughAHibernateProxy() {
+        TroubleTicket ticket = TroubleTicket.open("TT-2026-000001", new TenantId("tenant-a"), newTicket, "partner-a",
+                NOW);
+        // Like a Hibernate proxy: the fields stay empty and the getter answers from the loaded ticket.
+        TroubleTicket proxy = new TroubleTicket() {
+            @Override
+            public String getId() {
+                return "TT-2026-000001";
+            }
+        };
+
+        assertThat(ticket).isEqualTo(proxy);
+    }
+
+    @Test
     void notesCannotBeChangedFromOutside() {
         TroubleTicket ticket = TroubleTicket.open("TT-2026-000001", new TenantId("tenant-a"), newTicket, "partner-a",
                 NOW);

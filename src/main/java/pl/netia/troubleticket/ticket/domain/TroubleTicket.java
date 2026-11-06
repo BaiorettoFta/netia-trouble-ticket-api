@@ -187,9 +187,13 @@ public class TroubleTicket implements Persistable<String> {
         return Collections.unmodifiableList(notes);
     }
 
+    /**
+     * Tickets are equal when their ids are. The other id is read through the getter: a Hibernate proxy leaves its
+     * fields empty and answers getters from the loaded ticket.
+     */
     @Override
     public boolean equals(Object other) {
-        return this == other || other instanceof TroubleTicket ticket && id.equals(ticket.id);
+        return this == other || other instanceof TroubleTicket ticket && id.equals(ticket.getId());
     }
 
     @Override

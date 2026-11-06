@@ -21,9 +21,10 @@ import pl.netia.troubleticket.web.ApiPaths;
 import pl.netia.troubleticket.web.ErrorResponseWriter;
 
 /**
- * Every endpoint requires a Bearer JWT. Spring Boot verifies the signature (JWKS), issuer, audience and time window
- * from {@code spring.security.oauth2.resourceserver.jwt.*}; the {@link TokenClaimsValidator} bean is added to those
- * checks automatically. The API is stateless and used by systems, so sessions, CSRF, form login and HTTP Basic are off.
+ * Every API operation requires a Bearer JWT. Spring Boot verifies the signature (JWKS), issuer, audience and time
+ * window from {@code spring.security.oauth2.resourceserver.jwt.*}; the {@link TokenClaimsValidator} bean is added to
+ * those checks automatically. The API is stateless and used by systems, so sessions, CSRF, form login and HTTP Basic
+ * are off.
  *
  * <p>Permissions are OAuth2 scopes: {@code trouble-ticket:read} for reading, {@code trouble-ticket:write} for
  * creating, closing and adding notes. They are checked here, by method and path, before the request body is read
